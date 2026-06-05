@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#FAFAF8">
+<title>Orio</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+:root{
+  --g:#7A9E8E;--gd:#5E8475;--gl:rgba(122,158,142,.14);
+  --bg:#FAFAF8;--bg2:#F0EDE6;--bg3:#E8E3DA;--card:#FFFFFF;
+  --ink:#1A1A16;--ink2:#484840;--ink3:#8A8A80;
+  --red:#C13333;--redlt:#FDF0F0;--redbr:rgba(193,51,51,.2);
+  --amber:#A06614;--amberlt:#FEF3E2;
+  --border:rgba(0,0,0,.07);
+  --sans:'Plus Jakarta Sans',system-ui,sans-serif;
+  --nav-h:72px;--safe-bottom:env(safe-area-inset-bottom, 0px);
+}
+html,body{height:100%;overscroll-behavior:none;background:var(--bg)}
+body{font-family:var(--sans);color:var(--ink);overflow:hidden}
+
+/* APP SHELL */
+.app{display:flex;flex-direction:column;height:100dvh;max-width:430px;margin:0 auto;position:relative;background:var(--bg);box-shadow:0 0 40px rgba(0,0,0,.1)}
+
+/* PAGES */
+.pages{flex:1;overflow:hidden;position:relative}
+.page{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .22s ease,transform .22s ease}
+.page.active{opacity:1;pointer-events:all;transform:none}
+.page-content{padding:0 0 calc(var(--nav-h) + 20px + var(--safe-bottom))}
+
+/* TOPBAR */
+.topbar{padding:52px 20px 16px;background:var(--bg)}
+.topbar-row{display:flex;justify-content:space-between;align-items:flex-start}
+.tb-greeting{font-size:13px;color:var(--ink3);font-weight:500;margin-bottom:3px}
+.tb-title{font-size:24px;font-weight:700;color:var(--ink);letter-spacing:-.03em;line-height:1.1}
+.tb-title span{color:var(--g)}
+.tb-actions{display:flex;gap:8px;padding-top:4px}
+.tb-btn{width:38px;height:38px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:background .15s}
+.tb-btn:active{background:var(--bg2)}
+.notif-dot{position:absolute;top:7px;right:7px;width:8px;height:8px;background:var(--red);border-radius:50%;border:2px solid var(--bg)}
+
+/* BOTTOM NAV */
+.nav{position:absolute;bottom:0;left:0;right:0;height:calc(var(--nav-h) + var(--safe-bottom));background:var(--card);border-top:1px solid var(--border);display:flex;align-items:flex-start;padding-top:8px;padding-bottom:var(--safe-bottom)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:6px 4px;transition:opacity .15s;position:relative}
+.nav-icon{width:24px;height:24px;display:flex;align-items:center;justify-content:center}
+.nav-label{font-size:10px;font-weight:600;color:var(--ink3);letter-spacing:.01em;transition:color .15s}
+.nav-item.active .nav-label{color:var(--g)}
+.nav-item.active .nav-icon svg{stroke:var(--g)}
+.nav-icon svg{stroke:var(--ink3);transition:stroke .15s}
+.nav-badge{position:absolute;top:4px;right:calc(50% - 18px);width:16px;height:16px;background:var(--red);border-radius:50%;font-size:9px;font-weight:700;color:white;display:flex;align-items:center;justify-content:center;border:2px solid var(--card)}
+
+/* CARDS */
+.card{background:var(--card);border-radius:20px;padding:16px;border:1px solid var(--border)}
+.card+.card{margin-top:12px}
+
+/* ALERT CARD */
+.alert-card{background:var(--redlt);border:1px solid var(--redbr);border-radius:18px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;transition:opacity .15s}
+.alert-card:active{opacity:.8}
+.alert-ico{width:36px;height:36px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.alert-title{font-size:14px;font-weight:600;color:var(--red);margin-bottom:3px}
+.alert-sub{font-size:12px;color:#8B2020;line-height:1.45}
+.alert-link{font-size:12px;font-weight:600;color:var(--red);margin-top:5px}
+
+/* STATUS CARD */
+.status-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.status-name{font-size:16px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
+.status-time{font-size:12px;color:var(--ink3);margin-top:2px}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:100px;font-size:11px;font-weight:600}
+.pill-ok{background:var(--gl);color:var(--gd)}
+.pill-warn{background:var(--amberlt);color:var(--amber)}
+.pill-red{background:var(--redlt);color:var(--red)}
+.pill-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.status-rows{display:flex;flex-direction:column;gap:6px}
+.srow{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:10px;background:var(--bg)}
+.srow-l{font-size:12px;color:var(--ink3)}
+.srow-v{font-size:12px;font-weight:600;color:var(--ink)}
+.srow-v.ok{color:var(--gd)}
+.srow-v.warn{color:var(--amber)}
+.srow-v.alert{color:var(--red)}
+
+/* QUICK ACTIONS */
+.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qa-btn{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;cursor:pointer;transition:background .15s,transform .12s;text-align:left}
+.qa-btn:active{background:var(--bg2);transform:scale(.97)}
+.qa-ico{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.qa-name{font-size:13px;font-weight:600;color:var(--ink)}
+.qa-note{font-size:11px;color:var(--ink3);margin-top:2px}
+
+/* WEEK CHART */
+.week-bars{display:flex;gap:6px;align-items:flex-end;height:64px}
+.wb{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+.wb-bar{width:100%;border-radius:4px 4px 0 0;min-height:4px;transition:height .4s ease}
+.wb-bar.ok{background:rgba(122,158,142,.45)}
+.wb-bar.warn{background:rgba(160,102,20,.35)}
+.wb-dot{width:6px;height:6px;border-radius:50%}
+.wb-label{font-size:9px;color:var(--ink3);font-weight:500}
+
+/* SECTION LABEL */
+.sec-label{font-size:12px;font-weight:700;color:var(--ink3);letter-spacing:.06em;text-transform:uppercase;margin:20px 20px 10px}
+
+/* PADDING */
+.px{padding-left:20px;padding-right:20px}
+
+/* SCHEDULE */
+.sched-filters{display:flex;gap:8px;padding:0 20px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
+.sched-filters::-webkit-scrollbar{display:none}
+.sf{padding:7px 16px;border-radius:100px;font-size:12px;font-weight:600;border:1px solid var(--border);background:var(--card);color:var(--ink3);cursor:pointer;white-space:nowrap;font-family:var(--sans);transition:all .15s}
+.sf.active{background:var(--ink);color:white;border-color:var(--ink)}
+.sday{font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.07em;text-transform:uppercase;padding:0 20px;margin:16px 0 8px}
+.sitem{display:flex;align-items:center;gap:12px;padding:12px 20px;background:var(--card);border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.sitem:first-of-type{border-top:1px solid var(--border)}
+.sitem:active{background:var(--bg2)}
+.sitem.overdue{background:#FFF8F8;border-left:3px solid var(--red)}
+.si-time{font-size:13px;font-weight:700;color:var(--ink);min-width:44px}
+.si-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.si-info{flex:1}
+.si-name{font-size:14px;font-weight:600;color:var(--ink)}
+.si-sub{font-size:11px;color:var(--ink3);margin-top:2px}
+.si-sub.alert{color:var(--red);font-weight:600}
+.si-check{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.si-check.done{background:var(--gl);border-color:var(--gd)}
+
+/* ALERTS PAGE */
+.alert-item{display:flex;gap:12px;padding:14px 20px;background:var(--card);border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.alert-item:active{background:var(--bg2)}
+.alert-item.unread{border-left:3px solid var(--red)}
+.ai-ico{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ai-content{flex:1}
+.ai-title{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:3px}
+.ai-sub{font-size:12px;color:var(--ink2);line-height:1.5}
+.ai-time{font-size:11px;color:var(--ink3);margin-top:4px}
+.ai-unread{width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0;margin-top:4px}
+
+/* MESSAGES */
+.rec-big{display:flex;flex-direction:column;align-items:center;gap:14px;padding:28px 20px}
+.rec-circle{width:80px;height:80px;border-radius:50%;background:var(--red);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s;font-family:var(--sans)}
+.rec-circle:active{transform:scale(.93)}
+.rec-circle.recording{animation:pulse-r 1s ease-in-out infinite}
+@keyframes pulse-r{0%,100%{box-shadow:0 0 0 0 rgba(193,51,51,.4)}50%{box-shadow:0 0 0 16px rgba(193,51,51,0)}}
+.rec-hint{font-size:13px;color:var(--ink3);font-weight:500}
+.rec-timer{font-size:28px;font-weight:700;color:var(--ink);letter-spacing:-.04em;min-height:36px}
+.rec-send{padding:14px 40px;background:var(--g);color:white;border:none;border-radius:14px;font-family:var(--sans);font-size:15px;font-weight:700;cursor:pointer;transition:transform .15s,opacity .15s;opacity:0;pointer-events:none}
+.rec-send.visible{opacity:1;pointer-events:all}
+.rec-send:active{transform:scale(.96)}
+.msg-list{display:flex;flex-direction:column}
+.msg-item{display:flex;gap:12px;padding:14px 20px;background:var(--card);border-bottom:1px solid var(--border);align-items:center}
+.msg-av{width:40px;height:40px;border-radius:50%;background:var(--gl);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--gd);flex-shrink:0}
+.msg-info{flex:1}
+.msg-name{font-size:14px;font-weight:600;color:var(--ink)}
+.msg-meta{font-size:11px;color:var(--ink3);margin-top:2px}
+.msg-play{width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s}
+.msg-play:active{background:var(--bg3)}
+
+/* PROFILE */
+.profile-hero{background:var(--card);padding:24px 20px 20px;border-bottom:1px solid var(--border)}
+.ph-avatar{width:68px;height:68px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--ink2);margin-bottom:12px}
+.ph-name{font-size:22px;font-weight:700;color:var(--ink);letter-spacing:-.03em}
+.ph-sub{font-size:13px;color:var(--ink3);margin-top:3px}
+.ph-stats{display:flex;gap:24px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+.ph-stat{text-align:center}
+.ph-stat-v{font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-.03em}
+.ph-stat-v.ok{color:var(--gd)}
+.ph-stat-l{font-size:10px;color:var(--ink3);margin-top:2px;font-weight:500}
+.setting-item{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:var(--card);border-bottom:1px solid var(--border)}
+.si-sl{font-size:14px;font-weight:600;color:var(--ink)}
+.si-ss{font-size:12px;color:var(--ink3);margin-top:2px}
+.toggle{width:48px;height:28px;border-radius:100px;border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--g)}
+.toggle.off{background:#D0CEC8}
+.toggle-k{position:absolute;top:3px;width:22px;height:22px;border-radius:50%;background:white;box-shadow:0 1px 3px rgba(0,0,0,.15);transition:left .2s}
+.toggle.on .toggle-k{left:23px}
+.toggle.off .toggle-k{left:3px}
+
+/* MODAL */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;justify-content:center;max-width:430px;margin:0 auto}
+.modal-ov.open{display:flex}
+.modal{background:var(--card);border-radius:28px 28px 0 0;padding:28px 24px 40px;width:100%;text-align:center}
+.modal-handle{width:36px;height:4px;background:var(--bg3);border-radius:2px;margin:0 auto 20px}
+.modal-title{font-size:18px;font-weight:700;color:var(--ink);letter-spacing:-.02em;margin-bottom:6px}
+.modal-sub{font-size:13px;color:var(--ink3);margin-bottom:24px;line-height:1.5}
+.modal-btns{display:flex;gap:10px;margin-top:20px}
+.mbtn{flex:1;padding:15px;border-radius:14px;border:1px solid var(--border);background:var(--bg2);color:var(--ink);font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;transition:all .15s}
+.mbtn:active{opacity:.8}
+.mbtn.primary{background:var(--g);color:white;border-color:var(--g)}
+
+/* ADD BTN */
+.fab{position:absolute;bottom:calc(var(--nav-h) + 20px + var(--safe-bottom));right:20px;width:52px;height:52px;border-radius:50%;background:var(--g);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(122,158,142,.4);transition:transform .15s}
+.fab:active{transform:scale(.92)}
+
+/* TOAST */
+.toast{position:fixed;bottom:calc(var(--nav-h) + 16px + var(--safe-bottom));left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:white;padding:12px 22px;border-radius:100px;font-size:13px;font-weight:600;transition:transform .4s cubic-bezier(.34,1.56,.64,1);z-index:300;white-space:nowrap;max-width:calc(100vw - 40px);text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* SCROLL */
+::-webkit-scrollbar{display:none}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- PAGES -->
+  <div class="pages">
+
+    <!-- HOME -->
+    <div class="page active" id="page-home">
+      <div class="page-content">
+        <div class="topbar">
+          <div class="topbar-row">
+            <div>
+              <div class="tb-greeting">Dzień dobry, Anno</div>
+              <div class="tb-title">Status <span>mamy</span></div>
+            </div>
+            <div class="tb-actions">
+              <div class="tb-btn" onclick="showPage('alerts')">
+                <div class="notif-dot"></div>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="var(--ink2)" stroke-width="1.6"><path d="M9 2a5 5 0 00-5 5v3l-1.5 1.5v.5h13v-.5L14 10V7a5 5 0 00-5-5zM7.5 14.5a1.5 1.5 0 003 0" stroke-linecap="round"/></svg>
+              </div>
+              <div class="tb-btn" onclick="openModal()">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="var(--ink2)" stroke-width="1.6"><rect x="5" y="2" width="8" height="10" rx="4"/><path d="M3 11a6 6 0 0012 0M9 17v-3" stroke-linecap="round"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="px">
+          <div class="alert-card" onclick="showPage('alerts')">
+            <div class="alert-ico">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="1.8"><path d="M8 4v4M8 10v1" stroke-linecap="round"/></svg>
+            </div>
+            <div>
+              <div class="alert-title">Lek niepotwierdzone</div>
+              <div class="alert-sub">Amlodipina 5mg o 17:00 — brak potwierdzenia przez 30 min</div>
+              <div class="alert-link">Zobacz alerty →</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="px" style="margin-top:12px">
+          <div class="card">
+            <div class="status-header">
+              <div>
+                <div class="status-name">Zofia Kowalska</div>
+                <div class="status-time">aktywna 12 min temu</div>
+              </div>
+              <div class="pill pill-warn"><span class="pill-dot"></span>uwaga</div>
+            </div>
+            <div class="status-rows">
+              <div class="srow"><span class="srow-l">Leki poranne</span><span class="srow-v ok">wzięte 8:30</span></div>
+              <div class="srow"><span class="srow-l">Leki wieczorne</span><span class="srow-v alert">niepotwierdzone</span></div>
+              <div class="srow"><span class="srow-l">Aktywność</span><span class="srow-v">salon, kuchnia</span></div>
+              <div class="srow"><span class="srow-l">Nastrój</span><span class="srow-v">dobry 😊</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec-label">Szybkie akcje</div>
+        <div class="px">
+          <div class="qa-grid">
+            <div class="qa-btn" onclick="openModal()">
+              <div class="qa-ico" style="background:#FDF0F0">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C13333" stroke-width="1.6"><rect x="6" y="2" width="8" height="10" rx="4"/><path d="M4 12a6 6 0 0012 0M10 18v-3" stroke-linecap="round"/></svg>
+              </div>
+              <div class="qa-name">Nagraj</div>
+              <div class="qa-note">wiadomość dla mamy</div>
+            </div>
+            <div class="qa-btn" onclick="showPage('schedule')">
+              <div class="qa-ico" style="background:var(--amberlt)">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#A06614" stroke-width="1.6"><rect x="3" y="4" width="14" height="13" rx="2"/><path d="M7 4V2M13 4V2M3 9h14" stroke-linecap="round"/></svg>
+              </div>
+              <div class="qa-name">Harmonogram</div>
+              <div class="qa-note">leki i alarmy</div>
+            </div>
+            <div class="qa-btn" onclick="showPage('alerts')">
+              <div class="qa-ico" style="background:#FDF0F0">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C13333" stroke-width="1.6"><path d="M10 2a6 6 0 00-6 6v4l-1.5 1.5v.5h15v-.5L16 12V8a6 6 0 00-6-6zM8.5 17a1.5 1.5 0 003 0" stroke-linecap="round"/></svg>
+              </div>
+              <div class="qa-name">Alerty</div>
+              <div class="qa-note">2 nieprzeczytane</div>
+            </div>
+            <div class="qa-btn">
+              <div class="qa-ico" style="background:var(--gl)">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="var(--gd)" stroke-width="1.6"><path d="M5 16V7l5-3 5 3v9l-5 2.5L5 16z" stroke-linejoin="round"/><path d="M10 4v14M5 10.5h10" stroke-linecap="round"/></svg>
+              </div>
+              <div class="qa-name">Raport</div>
+              <div class="qa-note">tygodniowy</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec-label">Aktywność — 7 dni</div>
+        <div class="px" style="margin-bottom:4px">
+          <div class="card">
+            <div class="week-bars">
+              <div class="wb"><div class="wb-bar ok" style="height:50px"></div><div class="wb-dot" style="background:var(--g)"></div><div class="wb-label">pon</div></div>
+              <div class="wb"><div class="wb-bar ok" style="height:58px"></div><div class="wb-dot" style="background:var(--g)"></div><div class="wb-label">wt</div></div>
+              <div class="wb"><div class="wb-bar warn" style="height:22px"></div><div class="wb-dot" style="background:var(--amber)"></div><div class="wb-label">śr</div></div>
+              <div class="wb"><div class="wb-bar ok" style="height:54px"></div><div class="wb-dot" style="background:var(--g)"></div><div class="wb-label">czw</div></div>
+              <div class="wb"><div class="wb-bar ok" style="height:60px"></div><div class="wb-dot" style="background:var(--g)"></div><div class="wb-label">pt</div></div>
+              <div class="wb"><div class="wb-bar warn" style="height:18px"></div><div class="wb-dot" style="background:var(--amber)"></div><div class="wb-label">sob</div></div>
+              <div class="wb"><div class="wb-bar ok" style="height:42px"></div><div class="wb-dot" style="background:var(--g)"></div><div class="wb-label">nd</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCHEDULE -->
+    <div class="page" id="page-schedule">
+      <div class="page-content">
+        <div class="topbar">
+          <div class="topbar-row">
+            <div><div class="tb-title">Harmonogram</div></div>
+          </div>
+        </div>
+        <div class="sched-filters">
+          <button class="sf active">Dzisiaj</button>
+          <button class="sf">Jutro</button>
+          <button class="sf">Cały tydzień</button>
+        </div>
+        <div class="sday">Rano</div>
+        <div class="sitem">
+          <div class="si-time">7:30</div>
+          <div class="si-dot" style="background:var(--g)"></div>
+          <div class="si-info"><div class="si-name">Metoprolol 25mg</div><div class="si-sub">1 tabletka z wodą</div></div>
+          <div class="si-check done"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="var(--gd)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="sitem">
+          <div class="si-time">8:30</div>
+          <div class="si-dot" style="background:#378ADD"></div>
+          <div class="si-info"><div class="si-name">Wiadomość od Ani</div><div class="si-sub">poranne powitanie</div></div>
+          <div class="si-check done"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="var(--gd)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="sday">Południe</div>
+        <div class="sitem">
+          <div class="si-time">12:00</div>
+          <div class="si-dot" style="background:var(--amber)"></div>
+          <div class="si-info"><div class="si-name">Orientacja dzienna</div><div class="si-sub">dzień, data, pogoda</div></div>
+          <div class="si-check done"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="var(--gd)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+        <div class="sday">Wieczór</div>
+        <div class="sitem overdue">
+          <div class="si-time">17:00</div>
+          <div class="si-dot" style="background:var(--red)"></div>
+          <div class="si-info"><div class="si-name">Amlodipina 5mg</div><div class="si-sub alert">niepotwierdzone — alert wysłany</div></div>
+          <div class="si-check" style="border-color:var(--red)"></div>
+        </div>
+        <div class="sitem">
+          <div class="si-time">20:00</div>
+          <div class="si-dot" style="background:#378ADD"></div>
+          <div class="si-info"><div class="si-name">Dobranoc od Marka</div><div class="si-sub">wiadomość głosowa</div></div>
+          <div class="si-check"></div>
+        </div>
+        <button class="fab" onclick="showToast('Formularz dodawania — wkrótce')">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="white" stroke-width="2"><path d="M11 3v16M3 11h16" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ALERTS -->
+    <div class="page" id="page-alerts">
+      <div class="page-content">
+        <div class="topbar">
+          <div class="topbar-row">
+            <div><div class="tb-title">Alerty</div></div>
+          </div>
+        </div>
+        <div class="sched-filters">
+          <button class="sf active">Wszystkie</button>
+          <button class="sf">Leki</button>
+          <button class="sf">Aktywność</button>
+          <button class="sf">SOS</button>
+        </div>
+        <div class="alert-item unread">
+          <div class="ai-ico" style="background:var(--redlt)">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--red)" stroke-width="1.5"><path d="M8 4v4M8 10v1" stroke-linecap="round"/><circle cx="8" cy="8" r="6"/></svg>
+          </div>
+          <div class="ai-content">
+            <div class="ai-title">Lek niepotwierdzone</div>
+            <div class="ai-sub">Amlodipina 5mg o 17:00 nie została potwierdzona przez 30 minut</div>
+            <div class="ai-time">dziś, 17:32</div>
+          </div>
+          <div class="ai-unread"></div>
+        </div>
+        <div class="alert-item unread">
+          <div class="ai-ico" style="background:var(--amberlt)">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--amber)" stroke-width="1.5"><path d="M8 4v4M8 10v1" stroke-linecap="round"/><path d="M1.5 14L8 2l6.5 12H1.5z" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="ai-content">
+            <div class="ai-title">Niska aktywność — środa</div>
+            <div class="ai-sub">Brak ruchu przez 4.5 godziny między 10:00 a 14:30</div>
+            <div class="ai-time">środa, 14:30</div>
+          </div>
+          <div class="ai-unread"></div>
+        </div>
+        <div class="alert-item">
+          <div class="ai-ico" style="background:var(--redlt)">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--red)" stroke-width="1.5"><path d="M8 2v5M5 2L3 4M11 2l2 2" stroke-linecap="round"/><circle cx="8" cy="10" r="3.5"/></svg>
+          </div>
+          <div class="ai-content">
+            <div class="ai-title">Przycisk SOS — fałszywy alarm</div>
+            <div class="ai-sub">Mama nacisnęła SOS o 20:14 — przypadkowe naciśnięcie</div>
+            <div class="ai-time">wtorek, 20:14</div>
+          </div>
+        </div>
+        <div class="alert-item">
+          <div class="ai-ico" style="background:var(--gl)">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--gd)" stroke-width="1.5"><path d="M3 8l3.5 3.5L13 4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8" cy="8" r="6"/></svg>
+          </div>
+          <div class="ai-content">
+            <div class="ai-title">5 dni z rzędu — leki wzięte</div>
+            <div class="ai-sub">Wszystkie leki potwierdzone na czas przez 5 kolejnych dni</div>
+            <div class="ai-time">poniedziałek, 9:00</div>
+          </div>
+        </div>
+        <div class="alert-item">
+          <div class="ai-ico" style="background:var(--amberlt)">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--amber)" stroke-width="1.5"><path d="M8 4v4M8 10v1" stroke-linecap="round"/><path d="M1.5 14L8 2l6.5 12H1.5z" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="ai-content">
+            <div class="ai-title">Aktywność nocna</div>
+            <div class="ai-sub">Ruch o 2:40 — Orio odezwał się i uspokoił</div>
+            <div class="ai-time">niedziela, 2:40</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MESSAGES -->
+    <div class="page" id="page-messages">
+      <div class="page-content">
+        <div class="topbar">
+          <div class="topbar-row">
+            <div><div class="tb-title">Wiadomości</div></div>
+          </div>
+        </div>
+        <div class="rec-big">
+          <div class="rec-timer" id="recTimer"></div>
+          <button class="rec-circle" id="recBtn" onclick="toggleRec()">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="white" stroke-width="2"><rect x="10" y="4" width="12" height="16" rx="6"/><path d="M6 18a10 10 0 0020 0M16 28v-4" stroke-linecap="round"/></svg>
+          </button>
+          <div class="rec-hint" id="recHint">Naciśnij i nagraj wiadomość dla mamy</div>
+          <button class="rec-send" id="recSend" onclick="sendMsg()">Wyślij wiadomość</button>
+        </div>
+        <div class="sec-label">Ostatnio wysłane</div>
+        <div class="msg-list">
+          <div class="msg-item">
+            <div class="msg-av">AK</div>
+            <div class="msg-info"><div class="msg-name">Anna — "Dzień dobry mamo"</div><div class="msg-meta">odtworzone dziś 8:30 · 12 sek.</div></div>
+            <div class="msg-play"><svg width="10" height="12" viewBox="0 0 10 12" fill="none"><path d="M1 1l8 5-8 5V1z" fill="var(--ink2)"/></svg></div>
+          </div>
+          <div class="msg-item">
+            <div class="msg-av" style="background:#E6F1FB;color:#185FA5">MK</div>
+            <div class="msg-info"><div class="msg-name">Marek — "Dobranoc mamo"</div><div class="msg-meta">zaplanowane dziś 20:00 · 18 sek.</div></div>
+            <div class="msg-play"><svg width="10" height="12" viewBox="0 0 10 12" fill="none"><path d="M1 1l8 5-8 5V1z" fill="var(--ink2)"/></svg></div>
+          </div>
+          <div class="msg-item">
+            <div class="msg-av">AK</div>
+            <div class="msg-info"><div class="msg-name">Anna — "Zadzwonię o 16:00"</div><div class="msg-meta">odtworzone wczoraj 14:00 · 9 sek.</div></div>
+            <div class="msg-play"><svg width="10" height="12" viewBox="0 0 10 12" fill="none"><path d="M1 1l8 5-8 5V1z" fill="var(--ink2)"/></svg></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="page" id="page-profile">
+      <div class="page-content">
+        <div class="topbar">
+          <div class="topbar-row">
+            <div><div class="tb-title">Profil</div></div>
+          </div>
+        </div>
+        <div class="profile-hero">
+          <div class="ph-avatar">ZK</div>
+          <div class="ph-name">Zofia Kowalska</div>
+          <div class="ph-sub">ur. 1948 · 76 lat · Katowice</div>
+          <div class="ph-stats">
+            <div class="ph-stat"><div class="ph-stat-v ok">14</div><div class="ph-stat-l">rozmów dziś</div></div>
+            <div class="ph-stat"><div class="ph-stat-v ok">87%</div><div class="ph-stat-l">regularność leków</div></div>
+            <div class="ph-stat"><div class="ph-stat-v">38 dni</div><div class="ph-stat-l">z Orio</div></div>
+          </div>
+        </div>
+        <div class="sec-label">Ustawienia urządzenia</div>
+        <div class="setting-item">
+          <div><div class="si-sl">Alerty przy braku aktywności</div><div class="si-ss">po 4 godzinach ciszy w ciągu dnia</div></div>
+          <button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"><div class="toggle-k"></div></button>
+        </div>
+        <div class="setting-item">
+          <div><div class="si-sl">Nocna czujność</div><div class="si-ss">ruch między 23:00 a 6:00</div></div>
+          <button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"><div class="toggle-k"></div></button>
+        </div>
+        <div class="setting-item">
+          <div><div class="si-sl">Tryb wsparcia pamięci</div><div class="si-ss">orientacja dzienna, uspokajanie</div></div>
+          <button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"><div class="toggle-k"></div></button>
+        </div>
+        <div class="setting-item">
+          <div><div class="si-sl">Raport tygodniowy na email</div><div class="si-ss">co niedzielę o 9:00</div></div>
+          <button class="toggle off" onclick="this.classList.toggle('on');this.classList.toggle('off')"><div class="toggle-k"></div></button>
+        </div>
+        <div class="setting-item">
+          <div><div class="si-sl">Głośność Orio</div><div class="si-ss">70%</div></div>
+          <input type="range" min="0" max="100" value="70" style="width:100px">
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /pages -->
+
+  <!-- BOTTOM NAV -->
+  <nav class="nav">
+    <div class="nav-item active" id="nav-home" onclick="showPage('home')">
+      <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="12" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="12" width="7" height="7" rx="1.5"/><rect x="12" y="12" width="7" height="7" rx="1.5"/></svg></div>
+      <div class="nav-label">Główna</div>
+    </div>
+    <div class="nav-item" id="nav-schedule" onclick="showPage('schedule')">
+      <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="4" width="16" height="15" rx="2"/><path d="M7 4V2M15 4V2M3 9h16"/></svg></div>
+      <div class="nav-label">Plan</div>
+    </div>
+    <div class="nav-item" id="nav-alerts" onclick="showPage('alerts')">
+      <div class="nav-icon">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke-width="1.7" stroke-linecap="round"><path d="M11 2a6 6 0 00-6 6v4l-1.5 1.5v.5h15v-.5L17 12V8a6 6 0 00-6-6zM9.5 17a1.5 1.5 0 003 0"/></svg>
+        <div class="nav-badge">2</div>
+      </div>
+      <div class="nav-label">Alerty</div>
+    </div>
+    <div class="nav-item" id="nav-messages" onclick="showPage('messages')">
+      <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="3" width="9" height="12" rx="4.5"/><path d="M4 15a7 7 0 0014 0M12 20v-3"/></svg></div>
+      <div class="nav-label">Nagraj</div>
+    </div>
+    <div class="nav-item" id="nav-profile" onclick="showPage('profile')">
+      <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="7" r="4"/><path d="M3 19c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
+      <div class="nav-label">Profil</div>
+    </div>
+  </nav>
+
+</div><!-- /app -->
+
+<!-- MODAL NAGRYWANIE -->
+<div class="modal-ov" id="modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Nagraj wiadomość</div>
+    <div class="modal-sub">Twój głos zostanie odtworzony przez Orio o wybranej porze</div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+      <div class="rec-timer" id="modalTimer" style="font-size:28px;font-weight:700;color:var(--ink);letter-spacing:-.04em;min-height:36px"></div>
+      <button class="rec-circle" id="modalBtn" onclick="toggleModalRec()">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="white" stroke-width="2"><rect x="10" y="4" width="12" height="16" rx="6"/><path d="M6 18a10 10 0 0020 0M16 28v-4" stroke-linecap="round"/></svg>
+      </button>
+      <div id="modalHint" style="font-size:13px;color:var(--ink3);font-weight:500">Naciśnij i nagraj</div>
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn" onclick="closeModal()">Anuluj</button>
+      <button class="mbtn primary" onclick="closeModal();showToast('Wiadomość wysłana!')">Wyślij</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const pages = ['home','schedule','alerts','messages','profile'];
+
+function showPage(id) {
+  pages.forEach(p => {
+    document.getElementById('page-'+p).classList.toggle('active', p===id);
+    document.getElementById('nav-'+p).classList.toggle('active', p===id);
+  });
+  if(id==='alerts') {
+    document.querySelector('#nav-alerts .nav-badge') && (document.querySelector('#nav-alerts .nav-badge').style.display='none');
+  }
+}
+
+document.querySelectorAll('.sched-filters, .alert-filters').forEach(wrap => {
+  if(!wrap) return;
+});
+document.querySelectorAll('.sf').forEach(btn => {
+  btn.addEventListener('click', function(){
+    const parent = this.closest('.sched-filters');
+    if(parent) parent.querySelectorAll('.sf').forEach(b=>b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+// REC na stronie wiadomości
+let recInt, recSecs=0, isRec=false;
+function toggleRec(){
+  isRec=!isRec;
+  const btn=document.getElementById('recBtn');
+  const timer=document.getElementById('recTimer');
+  const hint=document.getElementById('recHint');
+  const send=document.getElementById('recSend');
+  if(isRec){
+    btn.classList.add('recording');
+    recSecs=0;
+    hint.textContent='Nagrywanie... naciśnij ponownie aby zatrzymać';
+    send.classList.remove('visible');
+    recInt=setInterval(()=>{
+      recSecs++;
+      const m=Math.floor(recSecs/60).toString().padStart(2,'0');
+      const s=(recSecs%60).toString().padStart(2,'0');
+      timer.textContent=m+':'+s;
+      if(recSecs>=60) toggleRec();
+    },1000);
+  } else {
+    btn.classList.remove('recording');
+    clearInterval(recInt);
+    if(recSecs>0){
+      hint.textContent='Gotowe — '+recSecs+' sek. Możesz wysłać.';
+      send.classList.add('visible');
+    }
+  }
+}
+function sendMsg(){
+  document.getElementById('recSend').classList.remove('visible');
+  document.getElementById('recTimer').textContent='';
+  document.getElementById('recHint').textContent='Naciśnij i nagraj wiadomość dla mamy';
+  isRec=false;
+  showToast('Wiadomość wysłana! Orio odtworzy ją mamie.');
+}
+
+// MODAL
+let mRec=false, mInt, mSecs=0;
+function openModal(){document.getElementById('modal').classList.add('open')}
+function closeModal(){
+  document.getElementById('modal').classList.remove('open');
+  clearInterval(mInt); mRec=false;
+  document.getElementById('modalTimer').textContent='';
+  document.getElementById('modalBtn').classList.remove('recording');
+  document.getElementById('modalHint').textContent='Naciśnij i nagraj';
+}
+function toggleModalRec(){
+  mRec=!mRec;
+  const btn=document.getElementById('modalBtn');
+  const timer=document.getElementById('modalTimer');
+  const hint=document.getElementById('modalHint');
+  if(mRec){
+    btn.classList.add('recording');
+    mSecs=0;
+    hint.textContent='Nagrywanie...';
+    mInt=setInterval(()=>{
+      mSecs++;
+      const m=Math.floor(mSecs/60).toString().padStart(2,'0');
+      const s=(mSecs%60).toString().padStart(2,'0');
+      timer.textContent=m+':'+s;
+      if(mSecs>=60) toggleModalRec();
+    },1000);
+  } else {
+    btn.classList.remove('recording');
+    clearInterval(mInt);
+    if(mSecs>0) hint.textContent='Gotowe — '+mSecs+' sek.';
+  }
+}
+
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal()});
+
+// TOAST
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>
